@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Arthur & Tifenn</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(#0b1a2f, #1e2d47);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .question {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .buttons {
+      display: flex;
+      gap: 2rem;
+    }
+    button {
+      background-color: #f5c518;
+      color: #0b1a2f;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    .results {
+      margin-top: 2rem;
+      width: 80%;
+    }
+    .bar {
+      height: 24px;
+      background-color: #f5c518;
+      margin: 8px 0;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>À vous de voter ! Qui connaît le couple le mieux ?</h1>
+  <div class="question" id="question">Chargement...</div>
+  <div class="buttons">
+    <button onclick="vote('Arthur')">Arthur</button>
+    <button onclick="vote('Tifenn')">Tifenn</button>
+  </div>
+  <div class="results" id="results"></div>
+
+  <script>
+    const questions = [
+      "Qui a eu le coup de foudre en premier ?",
+      "Qui est le plus en retard ?",
+      "Qui a le plus de fringues ?",
+      "Qui est le plus têtu ?",
+      "Qui a la meilleure mémoire ?",
+      "Qui est le plus organisé ?",
+      "Qui est le plus asociable ?",
+      "Qui va vers l’autre après une dispute ?",
+      "Qui prend le plus de place au lit ?",
+      "Qui est le plus stressé aujourd’hui?",
+      "Qui porte la culotte dans le couple ?",
+      "Qui passe le plus de temps aux toilettes ?",
+      "Qui cuisine le mieux ?",
+      "Qui est le plus dépensier ?",
+      "Qui a le plus menti durant ce questionnaire ?"
+    ];
+
+    let current = 0;
+    const votes = questions.map(() => ({ Arthur: 0, Tifenn: 0 }));
+
+    const questionEl = document.getElementById('question');
+    const resultsEl = document.getElementById('results');
+
+    function vote(person) {
+      votes[current][person]++;
+      showResults();
+    }
+
+    function showResults() {
+      const result = votes[current];
+      const total = result.Arthur + result.Tifenn;
+      const arthurPercent = total ? (result.Arthur / total) * 100 : 0;
+      const tifennPercent = total ? (result.Tifenn / total) * 100 : 0;
+      resultsEl.innerHTML = `
+        <div>
+          Arthur: ${result.Arthur} vote(s)
+          <div class="bar" style="width:${arthurPercent}%"></div>
+        </div>
+        <div>
+          Tifenn: ${result.Tifenn} vote(s)
+          <div class="bar" style="width:${tifennPercent}%"></div>
+        </div>
+        <br>
+        <button onclick="nextQuestion()">Question suivante</button>
+      `;
+    }
+
+    function nextQuestion() {
+      current++;
+      if (current >= questions.length) {
+        questionEl.innerText = "Merci d'avoir participé !";
+        resultsEl.innerHTML = "";
+        return;
+      }
+      questionEl.innerText = questions[current];
+      resultsEl.innerHTML = "";
+    }
+
+    // Initialisation
+    questionEl.innerText = questions[current];
+  </script>
+</body>
+</html>
