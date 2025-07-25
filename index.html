@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Arthur & Tifenn</title>
+  <title>Quiz Arthur & Tifenn ⭐</title>
   <style>
     body {
-      font-family: sans-serif;
       background: linear-gradient(to bottom, #0d1b2a, #1b263b);
       color: white;
+      font-family: sans-serif;
       text-align: center;
       padding: 2rem;
     }
     button {
       padding: 1rem 2rem;
       margin: 1rem;
-      font-size: 1.2rem;
-      border: none;
+      font-size: 1.5rem;
       border-radius: 10px;
+      border: none;
       background-color: #e0aaff;
       cursor: pointer;
     }
@@ -25,27 +25,22 @@
       margin-top: 2rem;
       font-size: 1.3rem;
     }
-    #next {
-      margin-top: 2rem;
-      background-color: #c77dff;
-    }
   </style>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <h1>Quiz Arthur & Tifenn ⭐ Nuit étoilée</h1>
-  <h2 id="question"></h2>
+  <h1>Quiz Arthur & Tifenn ✨</h1>
+  <h2>Qui a eu le coup de foudre en premier ?</h2>
 
-  <button onclick="sendVote(currentQuestionId, 'Arthur')">Arthur</button>
-  <button onclick="sendVote(currentQuestionId, 'Tifenn')">Tifenn</button>
+  <button onclick="sendVote('Arthur')">Arthur</button>
+  <button onclick="sendVote('Tifenn')">Tifenn</button>
 
   <div id="results">Chargement des résultats...</div>
-  <button id="next" onclick="nextQuestion()">Suivant</button>
 
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyC2Z8_g3rGC1feDmQypaHk4zxCBvZ4otZI",
       authDomain: "quiz-arthur-et-tif.firebaseapp.com",
@@ -57,67 +52,27 @@
       measurementId: "G-SNSH465T79"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const questionId = 'q1';
 
-    const questions = [
-      "Qui a eu le coup de foudre en premier ?",
-      "Qui est le plus en retard ?",
-      "Qui a le plus de fringues ?",
-      "Qui est le plus têtu ?",
-      "Qui a la meilleure mémoire ?",
-      "Qui est le plus organisé ?",
-      "Qui est le plus asociable ?",
-      "Qui va vers l’autre après une dispute ?",
-      "Qui prend le plus de place au lit ?",
-      "Qui est le plus stressé aujourd’hui?",
-      "Qui porte la culotte dans le couple ?",
-      "Qui passe le plus de temps aux toilettes ?",
-      "Qui cuisine le mieux ?",
-      "Qui est le plus dépensier ?",
-      "Qui a le plus menti durant ce questionnaire ?"
-    ];
-
-    let currentIndex = 0;
-    let currentQuestionId = "q1";
-
-    function showQuestion(index) {
-      currentQuestionId = `q${index + 1}`;
-      document.getElementById("question").textContent = questions[index];
-      listenToResults(currentQuestionId);
+    function sendVote(answer) {
+      const voteRef = db.ref("votes/" + questionId + "/" + answer);
+      voteRef.transaction(count => (count || 0) + 1);
     }
 
-    function sendVote(questionId, answer) {
-      const voteRef = database.ref("votes/" + questionId + "/" + answer);
-      voteRef.transaction(current => (current || 0) + 1);
-    }
-
-    function listenToResults(questionId) {
-      const ref = database.ref("votes/" + questionId);
-      ref.on("value", (snapshot) => {
+    function showResults() {
+      const ref = db.ref("votes/" + questionId);
+      ref.on('value', snapshot => {
         const data = snapshot.val() || {};
         const arthur = data['Arthur'] || 0;
         const tifenn = data['Tifenn'] || 0;
-
         document.getElementById("results").innerHTML =
-          `<p>Arthur : ${arthur} vote(s)</p>
-           <p>Tifenn : ${tifenn} vote(s)</p>`;
+          `<p>Arthur : ${arthur} vote(s)</p><p>Tifenn : ${tifenn} vote(s)</p>`;
       });
     }
 
-    function nextQuestion() {
-      currentIndex++;
-      if (currentIndex < questions.length) {
-        showQuestion(currentIndex);
-      } else {
-        document.getElementById("question").textContent = "Merci pour votre participation ✨";
-        document.getElementById("results").innerHTML = "<p>Fin du quiz</p>";
-        document.getElementById("next").style.display = "none";
-      }
-    }
-
-    // Initialiser la première question
-    showQuestion(currentIndex);
+    showResults();
   </script>
 </body>
 </html>
