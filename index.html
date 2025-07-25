@@ -1,71 +1,65 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Arthur & Tifenn</title>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(#0b1a2f, #1e2d47);
+      font-family: sans-serif;
+      background: linear-gradient(to bottom, #0d1b2a, #1b263b);
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
       text-align: center;
-    }
-    .question {
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-    .buttons {
-      display: flex;
-      gap: 2rem;
+      padding: 2rem;
     }
     button {
-      background-color: #f5c518;
-      color: #0b1a2f;
-      border: none;
-      border-radius: 8px;
       padding: 1rem 2rem;
+      margin: 1rem;
       font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      background-color: #e0aaff;
       cursor: pointer;
-      transition: transform 0.2s ease;
     }
-    button:hover {
-      transform: scale(1.05);
-    }
-    .results {
+    #results {
       margin-top: 2rem;
-      width: 80%;
+      font-size: 1.3rem;
     }
-    .bar {
-      height: 24px;
-      background-color: #f5c518;
-      margin: 8px 0;
-      border-radius: 12px;
+    #next {
+      margin-top: 2rem;
+      background-color: #c77dff;
     }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
 </head>
 <body>
-  <h1>À vous de voter ! Qui connaît le couple le mieux ?</h1>
-  <div class="question" id="question">Chargement...</div>
-  <div class="buttons">
-    <button onclick="vote('Arthur')">Arthur</button>
-    <button onclick="vote('Tifenn')">Tifenn</button>
-  </div>
-  <div class="results" id="results"></div>
+  <h1>Quiz Arthur & Tifenn ⭐ Nuit étoilée</h1>
+  <h2 id="question"></h2>
+
+  <button onclick="sendVote(currentQuestionId, 'Arthur')">Arthur</button>
+  <button onclick="sendVote(currentQuestionId, 'Tifenn')">Tifenn</button>
+
+  <div id="results">Chargement des résultats...</div>
+  <button id="next" onclick="nextQuestion()">Suivant</button>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC2Z8_g3rGC1feDmQypaHk4zxCBvZ4otZI",
+      authDomain: "quiz-arthur-et-tif.firebaseapp.com",
+      databaseURL: "https://quiz-arthur-et-tif-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "quiz-arthur-et-tif",
+      storageBucket: "quiz-arthur-et-tif.firebasestorage.app",
+      messagingSenderId: "1087201359678",
+      appId: "1:1087201359678:web:a17f4b747404e205ba9e6f",
+      measurementId: "G-SNSH465T79"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     const questions = [
       "Qui a eu le coup de foudre en premier ?",
       "Qui est le plus en retard ?",
@@ -84,49 +78,46 @@
       "Qui a le plus menti durant ce questionnaire ?"
     ];
 
-    let current = 0;
-    const votes = questions.map(() => ({ Arthur: 0, Tifenn: 0 }));
+    let currentIndex = 0;
+    let currentQuestionId = "q1";
 
-    const questionEl = document.getElementById('question');
-    const resultsEl = document.getElementById('results');
-
-    function vote(person) {
-      votes[current][person]++;
-      showResults();
+    function showQuestion(index) {
+      currentQuestionId = `q${index + 1}`;
+      document.getElementById("question").textContent = questions[index];
+      listenToResults(currentQuestionId);
     }
 
-    function showResults() {
-      const result = votes[current];
-      const total = result.Arthur + result.Tifenn;
-      const arthurPercent = total ? (result.Arthur / total) * 100 : 0;
-      const tifennPercent = total ? (result.Tifenn / total) * 100 : 0;
-      resultsEl.innerHTML = `
-        <div>
-          Arthur: ${result.Arthur} vote(s)
-          <div class="bar" style="width:${arthurPercent}%"></div>
-        </div>
-        <div>
-          Tifenn: ${result.Tifenn} vote(s)
-          <div class="bar" style="width:${tifennPercent}%"></div>
-        </div>
-        <br>
-        <button onclick="nextQuestion()">Question suivante</button>
-      `;
+    function sendVote(questionId, answer) {
+      const voteRef = database.ref("votes/" + questionId + "/" + answer);
+      voteRef.transaction(current => (current || 0) + 1);
+    }
+
+    function listenToResults(questionId) {
+      const ref = database.ref("votes/" + questionId);
+      ref.on("value", (snapshot) => {
+        const data = snapshot.val() || {};
+        const arthur = data['Arthur'] || 0;
+        const tifenn = data['Tifenn'] || 0;
+
+        document.getElementById("results").innerHTML =
+          `<p>Arthur : ${arthur} vote(s)</p>
+           <p>Tifenn : ${tifenn} vote(s)</p>`;
+      });
     }
 
     function nextQuestion() {
-      current++;
-      if (current >= questions.length) {
-        questionEl.innerText = "Merci d'avoir participé !";
-        resultsEl.innerHTML = "";
-        return;
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        showQuestion(currentIndex);
+      } else {
+        document.getElementById("question").textContent = "Merci pour votre participation ✨";
+        document.getElementById("results").innerHTML = "<p>Fin du quiz</p>";
+        document.getElementById("next").style.display = "none";
       }
-      questionEl.innerText = questions[current];
-      resultsEl.innerHTML = "";
     }
 
-    // Initialisation
-    questionEl.innerText = questions[current];
+    // Initialiser la première question
+    showQuestion(currentIndex);
   </script>
 </body>
 </html>
